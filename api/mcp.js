@@ -1,11 +1,9 @@
-// api/mcp.js
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
   const token = process.env.META_ACCESS_TOKEN;
   const apiVersion = process.env.META_API_VERSION || "v20.0";
 
-  // Tool definitions
   const tools = {
     search: {
       name: "search",
@@ -24,7 +22,6 @@ export default async function handler(req, res) {
   };
 
   if (req.method === "GET") {
-    // Discovery endpoint
     return res.status(200).json({
       mcp: "1.0",
       tools: Object.values(tools)
@@ -32,11 +29,17 @@ export default async function handler(req, res) {
   }
 
   if (req.method === "POST") {
-    const { tool, input } = req.body || {};
+    let body = {};
+    try {
+      body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    } catch {
+      return res.status(400).json({ error: "Invalid JSON body" });
+    }
+
+    const { tool, input } = body || {};
 
     try {
       if (tool === "search") {
-        // List ad accounts
         const resp = await fetch(
           `https://graph.facebook.com/${apiVersion}/me/adaccounts?fields=name,account_id`,
           { headers: { Authorization: `Bearer ${token}` } }
@@ -46,7 +49,6 @@ export default async function handler(req, res) {
       }
 
       if (tool === "fetch") {
-        // Fetch campaign insights
         const resp = await fetch(
           `https://graph.facebook.com/${apiVersion}/${input.campaign_id}/insights?fields=campaign_name,impressions,clicks,spend`,
           { headers: { Authorization: `Bearer ${token}` } }
