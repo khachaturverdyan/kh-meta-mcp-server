@@ -1,8 +1,16 @@
 import fetch from "node-fetch";
 
 export default async function handler(req, res) {
-  // Always respond with JSON
+  // ✅ Always send CORS + JSON headers
   res.setHeader("Content-Type", "application/json");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  // ✅ Handle preflight requests (ChatGPT does this before POST/GET)
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
   const token = process.env.META_ACCESS_TOKEN;
   const apiVersion = process.env.META_API_VERSION || "v20.0";
@@ -25,7 +33,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // Discovery endpoint
+    // ✅ MCP Discovery endpoint
     if (req.method === "GET") {
       console.log("MCP discovery requested");
       return res.status(200).json({
@@ -34,7 +42,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // Tool execution
+    // ✅ Tool execution endpoint
     if (req.method === "POST") {
       let body = {};
       try {
@@ -74,7 +82,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Unknown tool" });
     }
 
-    // Unsupported method
+    // ❌ Unsupported method
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     console.error("Server error:", err);
