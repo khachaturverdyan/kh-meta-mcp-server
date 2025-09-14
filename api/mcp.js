@@ -5,11 +5,19 @@ export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json");
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
-  // ✅ Handle preflight requests (ChatGPT does this before POST/GET)
+  // ✅ Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.status(200).end();
+  }
+
+  // ✅ 🔑 API Key Authentication (add your API_KEY in Vercel env vars)
+  const expectedKey = process.env.API_KEY;
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+    return res.status(401).json({ error: "Unauthorized" });
   }
 
   const token = process.env.META_ACCESS_TOKEN;
@@ -33,7 +41,6 @@ export default async function handler(req, res) {
   };
 
   try {
-    // ✅ MCP Discovery endpoint
     if (req.method === "GET") {
       console.log("MCP discovery requested");
       return res.status(200).json({
@@ -42,7 +49,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ✅ Tool execution endpoint
     if (req.method === "POST") {
       let body = {};
       try {
@@ -61,7 +67,6 @@ export default async function handler(req, res) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const data = await resp.json();
-        console.log("Search result:", data);
         return res.status(200).json({ output: data });
       }
 
@@ -75,14 +80,12 @@ export default async function handler(req, res) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const data = await resp.json();
-        console.log("Fetch result:", data);
         return res.status(200).json({ output: data });
       }
 
       return res.status(400).json({ error: "Unknown tool" });
     }
 
-    // ❌ Unsupported method
     return res.status(405).json({ error: "Method not allowed" });
   } catch (err) {
     console.error("Server error:", err);
