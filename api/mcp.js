@@ -7,6 +7,19 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
+
+  // ✅ 🔑 API Key Authentication (add your API_KEY in Vercel env vars)
+const expectedKey = process.env.API_KEY;
+const authHeader = req.headers["authorization"];
+
+// 🔎 Debugging: log values to Vercel logs
+console.log("Received Authorization header:", authHeader);
+console.log("Expected:", `Bearer ${expectedKey}`);
+
+if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
+  return res.status(401).json({ error: "Unauthorized" });
+}
+
   // ✅ Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.status(200).end();
