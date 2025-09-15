@@ -12,22 +12,14 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // ✅ Fake OAuth config (so ChatGPT stops complaining)
- if (req.method === "GET" && req.url.includes("/oauth/config")) {
+  // ✅ Fake OAuth config (so ChatGPT stops complaining if it probes for it)
+  if (req.method === "GET" && req.url.includes("/oauth/config")) {
     return res.status(200).json({
       client_id: "dummy-client",
       client_secret: "dummy-secret",
       auth_url: "https://example.com/oauth/authorize",
       token_url: "https://example.com/oauth/token"
     });
-  }
-
-  // ✅ 🔑 API Key Authentication (for actual MCP requests)
-  const expectedKey = process.env.API_KEY;
-  const authHeader = req.headers["authorization"];
-
-  if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
-    return res.status(401).json({ error: "Unauthorized" });
   }
 
   // ✅ Meta API config
