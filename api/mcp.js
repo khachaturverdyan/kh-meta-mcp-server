@@ -7,25 +7,22 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
 
-
-  // ✅ 🔑 API Key Authentication (add your API_KEY in Vercel env vars)
-const expectedKey = process.env.API_KEY;
-const authHeader = req.headers["authorization"];
-
-// 🔎 Debugging: log values to Vercel logs
-console.log("Received Authorization header:", authHeader);
-console.log("Expected:", `Bearer ${expectedKey}`);
-
-if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
-  return res.status(401).json({ error: "Unauthorized" });
-}
-
   // ✅ Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // ✅ 🔑 API Key Authentication (add your API_KEY in Vercel env vars)
+  // ✅ Fake OAuth config (so ChatGPT stops complaining)
+  if (req.method === "GET" && req.url.endsWith("/oauth/config")) {
+    return res.status(200).json({
+      client_id: "dummy-client",
+      client_secret: "dummy-secret",
+      auth_url: "https://example.com/oauth/authorize",
+      token_url: "https://example.com/oauth/token"
+    });
+  }
+
+  // ✅ 🔑 API Key Authentication (for actual MCP requests)
   const expectedKey = process.env.API_KEY;
   const authHeader = req.headers["authorization"];
 
@@ -33,6 +30,7 @@ if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
     return res.status(401).json({ error: "Unauthorized" });
   }
 
+  // ✅ Meta API config
   const token = process.env.META_ACCESS_TOKEN;
   const apiVersion = process.env.META_API_VERSION || "v20.0";
 
@@ -54,6 +52,7 @@ if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
   };
 
   try {
+    // ✅ MCP discovery
     if (req.method === "GET") {
       console.log("MCP discovery requested");
       return res.status(200).json({
@@ -62,6 +61,7 @@ if (!authHeader || authHeader !== `Bearer ${expectedKey}`) {
       });
     }
 
+    // ✅ MCP tool execution
     if (req.method === "POST") {
       let body = {};
       try {
