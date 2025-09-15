@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   }
 
   // ✅ Fake OAuth config (so ChatGPT stops complaining)
-  if (req.method === "GET" && req.url.endsWith("/oauth/config")) {
+ if (req.method === "GET" && req.url.includes("/oauth/config")) {
     return res.status(200).json({
       client_id: "dummy-client",
       client_secret: "dummy-secret",
